@@ -6,7 +6,7 @@ authors = [
     {name = "Vladimir Skvortsov",email = "mail@vladimirskvortsov.com"}
 ]
 readme = "README.md"
-requires-python = ">=2.7"
+requires-python = ">=3.10"
 dependencies = [
 ]
 
