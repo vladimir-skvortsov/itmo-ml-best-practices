@@ -1,6 +1,6 @@
-# itmo-ml-best-practices
+# itmo-ml-best-practices (iris)
 
-Course homework
+A data analysis project based on the Iris dataset. The project includes data processing, basic analysis, classification model construction, and results evaluation.
 
 ## Project Organization
 
