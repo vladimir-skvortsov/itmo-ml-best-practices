@@ -16,4 +16,5 @@ COPY . .
 
 ENV PYTHONPATH=/app/src:$PYTHONPATH
 
-CMD ["python", "src/main.py"]
+# TODO: Repalce with a real script when added
+CMD ["/bin/bash"]
