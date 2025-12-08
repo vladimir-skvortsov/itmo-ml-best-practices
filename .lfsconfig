@@ -1,0 +1,2 @@
+[lfs]
+    url = s3://itmo-ml-best-practices/lfs-objects?region=us-east-1
