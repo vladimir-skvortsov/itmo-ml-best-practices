@@ -246,8 +246,9 @@ def main(
     target_col: str,
 ) -> None:
     """Train a model with MLflow tracking."""
-    # Set experiment
+    # Set experiment and enable autologging
     mlflow.set_experiment("ml-best-practices")
+    mlflow.sklearn.autolog()
 
     # Prepare parameters
     if model_type == "random_forest":
@@ -276,27 +277,14 @@ def main(
             df, target_col=target_col, test_size=test_size, random_state=random_state
         )
 
-        # Log data parameters
-        mlflow.log_params(
-            {
-                "data_path": data_path,
-                "test_size": test_size,
-                "random_state": random_state,
-                "n_samples": len(df),
-                "n_features": X_train.shape[1],
-            }
-        )
+        # Log custom parameters (autolog handles model params)
+        mlflow.log_param("data_path", data_path)
+        mlflow.log_param("target_col", target_col)
+        mlflow.log_param("n_samples", len(df))
+        mlflow.log_param("n_features", X_train.shape[1])
 
-        # Train model
+        # Train model (autolog will handle params, metrics, and model)
         model = train_model(model_type, X_train, y_train, **model_params)
-
-        # Log model parameters
-        mlflow.log_params(
-            {
-                "model_type": model_type,
-                **model_params,
-            }
-        )
 
         # Evaluate model
         metrics = evaluate_model(model, X_test, y_test)
@@ -324,12 +312,11 @@ def main(
             f.write(report)
         mlflow.log_artifact(str(report_path))
 
-        # Log model
-        mlflow.sklearn.log_model(
-            model,
-            artifact_path="model",
-            registered_model_name=register_model,
-        )
+        # Register model if requested (autolog already saved it)
+        if register_model:
+            run = mlflow.active_run()
+            model_uri = f"runs:/{run.info.run_id}/model"
+            mlflow.register_model(model_uri, register_model)
 
         # Save model locally as well
         models_dir = Path("models")
