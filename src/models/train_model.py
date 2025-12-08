@@ -23,6 +23,7 @@ from sklearn.metrics import (
     roc_curve,
 )
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 
 from src.models.mlflow_config import MLflowConfig
 
@@ -41,8 +42,20 @@ def prepare_data(
     random_state: int = 42,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Split data into train and test sets."""
+    # Drop Id column if exists
+    if "Id" in df.columns:
+        df = df.drop(columns=["Id"])
+
     X = df.drop(columns=[target_col]).values
-    y = df[target_col].values
+    y_raw = df[target_col].values
+
+    # Encode target if it's categorical
+    if y_raw.dtype == object or isinstance(y_raw[0], str):
+        label_encoder = LabelEncoder()
+        y = label_encoder.fit_transform(y_raw)
+        click.echo(f"Encoded target classes: {dict(enumerate(label_encoder.classes_))}")
+    else:
+        y = y_raw
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, random_state=random_state, stratify=y
@@ -77,15 +90,28 @@ def evaluate_model(
 ) -> Dict[str, float]:
     """Evaluate model and return metrics."""
     y_pred = model.predict(X_test)
-    y_pred_proba = model.predict_proba(X_test)[:, 1]
+    y_pred_proba = model.predict_proba(X_test)
+
+    # Determine if binary or multiclass
+    n_classes = len(np.unique(y_test))
+    avg_method = "binary" if n_classes == 2 else "weighted"
 
     metrics = {
         "accuracy": accuracy_score(y_test, y_pred),
-        "precision": precision_score(y_test, y_pred, average="binary"),
-        "recall": recall_score(y_test, y_pred, average="binary"),
-        "f1": f1_score(y_test, y_pred, average="binary"),
-        "roc_auc": roc_auc_score(y_test, y_pred_proba),
+        "precision": precision_score(
+            y_test, y_pred, average=avg_method, zero_division=0
+        ),
+        "recall": recall_score(y_test, y_pred, average=avg_method, zero_division=0),
+        "f1": f1_score(y_test, y_pred, average=avg_method, zero_division=0),
     }
+
+    # Add ROC AUC only for binary classification or use OvR for multiclass
+    if n_classes == 2:
+        metrics["roc_auc"] = roc_auc_score(y_test, y_pred_proba[:, 1])
+    else:
+        metrics["roc_auc"] = roc_auc_score(
+            y_test, y_pred_proba, multi_class="ovr", average="weighted"
+        )
 
     click.echo("\nModel Performance:")
     for metric_name, value in metrics.items():
@@ -134,13 +160,35 @@ def plot_roc_curve(
     y_test: np.ndarray, y_pred_proba: np.ndarray, save_path: str
 ) -> None:
     """Plot and save ROC curve."""
-    fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
-    roc_auc = roc_auc_score(y_test, y_pred_proba)
+    n_classes = len(np.unique(y_test))
 
     plt.figure(figsize=(8, 6))
-    plt.plot(
-        fpr, tpr, color="darkorange", lw=2, label=f"ROC curve (AUC = {roc_auc:.2f})"
-    )
+
+    if n_classes == 2:
+        # Binary classification
+        fpr, tpr, _ = roc_curve(y_test, y_pred_proba[:, 1])
+        roc_auc = roc_auc_score(y_test, y_pred_proba[:, 1])
+        plt.plot(
+            fpr, tpr, color="darkorange", lw=2, label=f"ROC curve (AUC = {roc_auc:.2f})"
+        )
+    else:
+        # Multiclass - plot macro-average ROC curve
+        from sklearn.preprocessing import label_binarize
+
+        y_test_bin = label_binarize(y_test, classes=np.unique(y_test))
+
+        # Compute macro-average ROC curve and ROC area
+        fpr = dict()
+        tpr = dict()
+        roc_auc = dict()
+        for i in range(n_classes):
+            fpr[i], tpr[i], _ = roc_curve(y_test_bin[:, i], y_pred_proba[:, i])
+            roc_auc[i] = roc_auc_score(y_test_bin[:, i], y_pred_proba[:, i])
+
+        # Plot all ROC curves
+        for i in range(n_classes):
+            plt.plot(fpr[i], tpr[i], lw=2, label=f"Class {i} (AUC = {roc_auc[i]:.2f})")
+
     plt.plot([0, 1], [0, 1], color="navy", lw=2, linestyle="--", label="Random")
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -181,6 +229,12 @@ def plot_roc_curve(
     default=None,
     help="Register model with this name in Model Registry",
 )
+@click.option(
+    "--target-col",
+    type=str,
+    default="Species",
+    help="Name of target column in dataset",
+)
 def main(
     data_path: str,
     model_type: str,
@@ -190,6 +244,7 @@ def main(
     max_depth: int,
     run_name: str,
     register_model: str,
+    target_col: str,
 ) -> None:
     """Train a model with MLflow tracking."""
     # Initialize MLflow
@@ -219,7 +274,7 @@ def main(
         # Load and prepare data
         df = load_data(data_path)
         X_train, X_test, y_train, y_test = prepare_data(
-            df, test_size=test_size, random_state=random_state
+            df, target_col=target_col, test_size=test_size, random_state=random_state
         )
 
         # Log data parameters
@@ -253,7 +308,7 @@ def main(
         plots_dir.mkdir(parents=True, exist_ok=True)
 
         y_pred = model.predict(X_test)
-        y_pred_proba = model.predict_proba(X_test)[:, 1]
+        y_pred_proba = model.predict_proba(X_test)
 
         cm_path = plots_dir / "confusion_matrix.png"
         plot_confusion_matrix(y_test, y_pred, str(cm_path))
