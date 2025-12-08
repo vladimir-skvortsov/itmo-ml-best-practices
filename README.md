@@ -5,6 +5,7 @@ A machine learning project based on the classical Iris dataset. The project incl
 ## Requirements
 
 - Python >= 3.10
+- Git с Git LFS
 - Poetry >= 2.0.0 (recommended) or pip
 - Docker (optional, for containerized development)
 
