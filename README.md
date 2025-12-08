@@ -186,6 +186,13 @@ Or directly:
 python test_environment.py
 ```
 
+## Branches system
+
+Main branch: `main`
+Branch for development: `develop`
+
+Each homework has its own branch in the format `hw{number}`
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
