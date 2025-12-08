@@ -1,6 +1,7 @@
 """
 Train machine learning model with MLflow tracking.
 """
+
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
@@ -24,8 +25,6 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-
-from src.models.mlflow_config import MLflowConfig
 
 
 def load_data(data_path: str) -> pd.DataFrame:
@@ -247,8 +246,8 @@ def main(
     target_col: str,
 ) -> None:
     """Train a model with MLflow tracking."""
-    # Initialize MLflow
-    mlflow_config = MLflowConfig(experiment_name="ml-best-practices")
+    # Set experiment
+    mlflow.set_experiment("ml-best-practices")
 
     # Prepare parameters
     if model_type == "random_forest":
@@ -264,7 +263,7 @@ def main(
         }
 
     # Start MLflow run
-    with mlflow_config.start_run(
+    with mlflow.start_run(
         run_name=run_name,
         tags={
             "model_type": model_type,
@@ -278,7 +277,7 @@ def main(
         )
 
         # Log data parameters
-        mlflow_config.log_params(
+        mlflow.log_params(
             {
                 "data_path": data_path,
                 "test_size": test_size,
@@ -292,7 +291,7 @@ def main(
         model = train_model(model_type, X_train, y_train, **model_params)
 
         # Log model parameters
-        mlflow_config.log_params(
+        mlflow.log_params(
             {
                 "model_type": model_type,
                 **model_params,
@@ -301,7 +300,7 @@ def main(
 
         # Evaluate model
         metrics = evaluate_model(model, X_test, y_test)
-        mlflow_config.log_metrics(metrics)
+        mlflow.log_metrics(metrics)
 
         # Create and log visualizations
         plots_dir = Path("reports/figures")
@@ -312,21 +311,21 @@ def main(
 
         cm_path = plots_dir / "confusion_matrix.png"
         plot_confusion_matrix(y_test, y_pred, str(cm_path))
-        mlflow_config.log_artifact(str(cm_path))
+        mlflow.log_artifact(str(cm_path))
 
         roc_path = plots_dir / "roc_curve.png"
         plot_roc_curve(y_test, y_pred_proba, str(roc_path))
-        mlflow_config.log_artifact(str(roc_path))
+        mlflow.log_artifact(str(roc_path))
 
         # Save classification report
         report = classification_report(y_test, y_pred)
         report_path = plots_dir / "classification_report.txt"
         with open(report_path, "w") as f:
             f.write(report)
-        mlflow_config.log_artifact(str(report_path))
+        mlflow.log_artifact(str(report_path))
 
         # Log model
-        mlflow_config.log_model(
+        mlflow.sklearn.log_model(
             model,
             artifact_path="model",
             registered_model_name=register_model,

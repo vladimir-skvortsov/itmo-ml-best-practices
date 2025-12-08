@@ -10,8 +10,6 @@ import mlflow
 import pandas as pd
 from tabulate import tabulate
 
-from src.models.mlflow_config import MLflowConfig
-
 
 def compare_runs_table(
     experiment_name: str, metric_cols: Optional[List[str]] = None, max_runs: int = 10
@@ -89,10 +87,19 @@ def find_best_model(
     Returns:
         Series with best run information
     """
-    mlflow_config = MLflowConfig(experiment_name=experiment_name)
-    best_run = mlflow_config.get_best_run(metric=metric, ascending=ascending)
+    experiment = mlflow.get_experiment_by_name(experiment_name)
+    if experiment is None:
+        raise ValueError(f"Experiment '{experiment_name}' not found")
 
-    return best_run
+    runs = mlflow.search_runs(
+        experiment_ids=[experiment.experiment_id],
+        order_by=[f"metrics.{metric} {'ASC' if ascending else 'DESC'}"],
+        max_results=1,
+    )
+    if len(runs) == 0:
+        raise ValueError("No runs found in experiment")
+
+    return runs.iloc[0]
 
 
 def compare_registered_models(model_name: str) -> pd.DataFrame:

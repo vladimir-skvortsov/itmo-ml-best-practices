@@ -36,8 +36,9 @@ data/** filter=lfs diff=lfs merge=lfs -text
 
 ### Основные модули
 
-**`src/models/mlflow_config.py`** - конфигурация MLflow
 **`src/models/train_model.py`** - скрипт обучения
+**`src/models/predict_model.py`** - скрипт оценки
+**`src/models/compare_models.py`** - скрипт сравнения моделей
 
 ### Метаданные
 
