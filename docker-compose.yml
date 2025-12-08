@@ -1,7 +1,7 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  # MLflow tracking server with PostgreSQL and MinIO
+  # MLflow tracking server with PostgreSQL and AWS S3
   mlflow-server:
     image: python:3.10-slim
     container_name: mlflow-server
@@ -9,19 +9,19 @@ services:
       - "5000:5000"
     environment:
       - MLFLOW_BACKEND_STORE_URI=postgresql://mlflow:mlflow@postgres:5432/mlflow
-      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
-      - AWS_ACCESS_KEY_ID=minioadmin
-      - AWS_SECRET_ACCESS_KEY=minioadmin
+      # AWS S3 credentials - configure via .env file or pass directly
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
     command: >
       bash -c "pip install mlflow psycopg2-binary boto3 &&
                mlflow server
                --backend-store-uri postgresql://mlflow:mlflow@postgres:5432/mlflow
-               --default-artifact-root s3://mlflow-artifacts/
+               --default-artifact-root s3://${MLFLOW_S3_BUCKET:-mlflow-artifacts}/
                --host 0.0.0.0
                --port 5000"
     depends_on:
       - postgres
-      - minio
     networks:
       - mlflow-network
 
@@ -40,39 +40,6 @@ services:
     networks:
       - mlflow-network
 
-  # MinIO for artifact storage (S3-compatible)
-  minio:
-    image: minio/minio:latest
-    container_name: mlflow-minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-    command: server /data --console-address ":9001"
-    volumes:
-      - minio-data:/data
-    networks:
-      - mlflow-network
-
-  # MinIO bucket creation
-  minio-create-bucket:
-    image: minio/mc:latest
-    container_name: minio-create-bucket
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-      sleep 5;
-      /usr/bin/mc config host add minio http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb minio/mlflow-artifacts --ignore-existing;
-      /usr/bin/mc mb minio/lfs-objects --ignore-existing;
-      exit 0;
-      "
-    networks:
-      - mlflow-network
-
   # Main application
   ml-app:
     build:
@@ -84,23 +51,21 @@ services:
       - poetry-cache:/root/.cache/pypoetry
     environment:
       - MLFLOW_TRACKING_URI=http://mlflow-server:5000
-      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
-      - AWS_ACCESS_KEY_ID=minioadmin
-      - AWS_SECRET_ACCESS_KEY=minioadmin
-      - PYTHONPATH=/app/src
+      # AWS S3 credentials - configure via .env file or pass directly
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - PYTHONPATH=/app
     depends_on:
       - mlflow-server
-      - minio
     networks:
       - mlflow-network
     command: /bin/bash
 
 volumes:
   postgres-data:
-  minio-data:
   poetry-cache:
 
 networks:
   mlflow-network:
     driver: bridge
-
