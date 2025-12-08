@@ -75,6 +75,10 @@ python src/models/predict_model.py \
 
 Стадии: Development → Staging → Production → Archived
 
+### S3 артефакты
+
+![Артифакты S3](s3-artifacts.png)
+
 ---
 
 ## 3. Воспроизводимость
