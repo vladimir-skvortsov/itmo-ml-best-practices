@@ -10,6 +10,9 @@ PROFILE = default
 PROJECT_NAME = itmo-ml-best-practices
 PYTHON_INTERPRETER = python3
 
+# Set PYTHONPATH to include project root
+export PYTHONPATH := $(PROJECT_DIR):$(PYTHONPATH)
+
 ifeq (,$(shell which conda))
 HAS_CONDA=False
 else
@@ -79,6 +82,59 @@ test_environment:
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
+
+## Train model with MLflow tracking
+train:
+	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/train_model.py
+
+## Compare MLflow runs
+compare:
+	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/compare_models.py
+
+## Make predictions
+predict:
+	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/predict_model.py
+
+## Start MLflow UI
+mlflow-ui:
+	mlflow ui
+
+## Test reproducibility
+test-reproducibility:
+	bash scripts/test_reproducibility.sh
+
+## Setup Git LFS
+setup-lfs:
+	git lfs install
+	bash scripts/setup_s3.sh
+
+## Pull LFS files
+lfs-pull:
+	git lfs pull
+
+## Docker: Build image
+docker-build:
+	docker build -t ml-best-practices:latest .
+
+## Docker: Run container
+docker-run:
+	docker run -it --rm -v $(PWD):/app ml-best-practices:latest
+
+## Docker Compose: Start all services
+docker-up:
+	docker-compose up -d
+
+## Docker Compose: Stop all services
+docker-down:
+	docker-compose down
+
+## Docker Compose: View logs
+docker-logs:
+	docker-compose logs -f
+
+## Install Poetry dependencies
+install:
+	poetry install
 
 
 
