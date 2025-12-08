@@ -92,6 +92,12 @@ Run `make help` to see all available commands:
 - `make lint` - Run code linting with flake8
 - `make test_environment` - Test that Python environment is set up correctly
 - `make create_environment` - Set up Python interpreter environment (conda or virtualenv)
+- `make lfs-pull` - Download LFS files
+- `make train` - Train ML models
+- `make compare` - Compare ML models
+- `make predict` - Predict results
+- `make mlflow` - # Run MLflow UI locally
+- `make test` - Test producibility
 
 ## Development
 
