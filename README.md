@@ -97,7 +97,7 @@ Run `make help` to see all available commands:
 - `make compare` - Compare ML models
 - `make predict` - Predict results
 - `make mlflow` - # Run MLflow UI locally
-- `make test` - Test producibility
+- `make test` - Test reproducibility
 
 ## Development
 
