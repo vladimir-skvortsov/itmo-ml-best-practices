@@ -28,5 +28,5 @@ RUN mkdir -p data/raw data/processed data/interim data/external models mlruns re
 
 EXPOSE 5000
 
-# TODO: Repalce with a real script when added
+# TODO: Replace with a real script when added
 CMD ["/bin/bash"]
