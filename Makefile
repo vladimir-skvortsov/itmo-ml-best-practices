@@ -91,10 +91,11 @@ train:
 compare:
 	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/compare_models.py
 
-## Make predictions (requires --data-path argument)
+## Make predictions
 predict:
-	@echo "Usage: python src/models/predict_model.py --data-path <path> [--run-id <id> | --model-name <name>]"
-	@echo "Example: python src/models/predict_model.py --data-path data/raw/iris.csv --run-id <run-id>"
+	@echo "Note: Requires a trained model. Get run-id from 'make mlflow-ui' or train with 'make train'"
+	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/predict_model.py \
+		--data-path data/raw/iris.csv
 
 ## Start MLflow UI
 mlflow-ui:
