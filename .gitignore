@@ -92,3 +92,7 @@ mlartifacts/
 # Models
 models/*
 !models/.gitkeep
+
+# Reports
+reports/*
+!reports/.gitkeep
