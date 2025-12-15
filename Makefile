@@ -87,9 +87,21 @@ test_environment:
 train:
 	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/train_model.py
 
+## Run 15+ experiments
+experiments:
+	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/run_experiments.py
+
 ## Compare MLflow runs
 compare:
 	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/compare_models.py
+
+## Search and filter runs
+search:
+	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/search_runs.py search
+
+## Show leaderboard
+leaderboard:
+	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/search_runs.py leaderboard --metric test_accuracy
 
 ## Make predictions
 predict:
