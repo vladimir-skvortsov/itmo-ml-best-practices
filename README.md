@@ -52,52 +52,65 @@ docker run -it -v $(pwd):/app itmo-ml-best-practices
 
 ### Basic Workflow
 
-1. **Prepare the data**:
+1. **Start MLflow server**:
 
 ```bash
-make data
+docker-compose up -d
+# or
+make mlflow-ui
 ```
 
-Or directly:
+2. **Run experiments**:
 
 ```bash
-python src/data/make_dataset.py data/raw data/processed
-```
+# Single model training
+make train
 
-2. **Train a model**:
+# Run experiments with different algorithms
+make experiments
 
-```bash
-python src/models/train_model.py
+# View leaderboard
+make leaderboard
+
+# Search and filter runs
+make search
 ```
 
 3. **Make predictions**:
 
 ```bash
-python src/models/predict_model.py
+make predict
 ```
 
-4. **Generate visualizations**:
-
-```bash
-python src/visualization/visualize.py
-```
+4. **View results in MLflow UI**: http://localhost:5000
 
 ### Available Make Commands
 
 Run `make help` to see all available commands:
 
-- `make requirements` - Install Python dependencies
-- `make data` - Generate processed dataset from raw data
-- `make clean` - Remove all compiled Python files
-- `make lint` - Run code linting with flake8
-- `make test_environment` - Test that Python environment is set up correctly
-- `make create_environment` - Set up Python interpreter environment (conda or virtualenv)
+**ML & Experiments:**
+
+- `make train` - Train a single model with MLflow tracking
+- `make experiments` - Run 15+ experiments with different algorithms
+- `make compare` - Compare MLflow runs
+- `make search` - Search and filter experiments
+- `make leaderboard` - Show top models by metric
+- `make predict` - Make predictions using trained model
+
+**Infrastructure:**
+
+- `make docker-up` - Start Docker services (MLflow, PostgreSQL)
+- `make docker-down` - Stop Docker services
+- `make mlflow-ui` - Open MLflow UI
 - `make lfs-pull` - Download LFS files
-- `make train` - Train ML models
-- `make compare` - Compare ML models
-- `make predict` - Predict results
-- `make mlflow` - # Run MLflow UI locally
-- `make test` - Test reproducibility
+
+**Development:**
+
+- `make requirements` - Install Python dependencies
+- `make data` - Generate processed dataset
+- `make clean` - Remove compiled Python files
+- `make lint` - Run code linting
+- `make test-reproducibility` - Test reproducibility
 
 ## Development
 
@@ -163,6 +176,12 @@ bandit -r src/
         │
         ├── data           <- Scripts to download or generate data
         │   └── make_dataset.py
+        │
+        ├── experiments    <- Experiment tracking and MLflow utilities
+        │   ├── run_experiments.py  <- Run multiple experiments
+        │   ├── decorators.py       <- MLflow decorators
+        │   ├── utils.py            <- Helper functions
+        │   └── search_runs.py      <- CLI for search/filter
         │
         ├── features       <- Scripts to turn raw data into features for modeling
         │   └── build_features.py
