@@ -12,12 +12,6 @@ import mlflow
 def mlflow_experiment(experiment_name: str, run_name: str | None = None) -> Callable:
     """
     Decorator to automatically wrap function in MLflow run.
-
-    Usage:
-        @mlflow_experiment("my-experiment", "my-run")
-        def train_model(data, params):
-            model = fit(data, params)
-            return model
     """
 
     def decorator(func: Callable) -> Callable:
@@ -46,11 +40,6 @@ def mlflow_experiment(experiment_name: str, run_name: str | None = None) -> Call
 def log_params(func: Callable) -> Callable:
     """
     Decorator to automatically log function parameters to MLflow.
-
-    Usage:
-        @log_params
-        def train_model(learning_rate=0.01, n_estimators=100):
-            ...
     """
 
     @functools.wraps(func)
@@ -68,13 +57,6 @@ def log_params(func: Callable) -> Callable:
 def log_metrics(metric_names: list[str]) -> Callable:
     """
     Decorator to automatically log return values as metrics.
-
-    Usage:
-        @log_metrics(["accuracy", "f1_score"])
-        def evaluate(model, X, y):
-            acc = accuracy_score(y, model.predict(X))
-            f1 = f1_score(y, model.predict(X))
-            return {"accuracy": acc, "f1_score": f1}
     """
 
     def decorator(func: Callable) -> Callable:
@@ -97,11 +79,6 @@ def log_metrics(metric_names: list[str]) -> Callable:
 def log_execution_time(func: Callable) -> Callable:
     """
     Decorator to log function execution time.
-
-    Usage:
-        @log_execution_time
-        def train_model():
-            ...
     """
 
     @functools.wraps(func)
@@ -120,12 +97,6 @@ def log_execution_time(func: Callable) -> Callable:
 def log_artifacts(*artifact_paths: str) -> Callable:
     """
     Decorator to automatically log specified files as artifacts.
-
-    Usage:
-        @log_artifacts("model.pkl", "plot.png")
-        def train_and_save():
-            # Save files...
-            return model
     """
 
     def decorator(func: Callable) -> Callable:
@@ -149,12 +120,6 @@ def log_artifacts(*artifact_paths: str) -> Callable:
 class MLflowContext:
     """
     Context manager for MLflow runs.
-
-    Usage:
-        with MLflowContext("experiment-name", "run-name") as mlf:
-            mlf.log_param("lr", 0.01)
-            model.fit(X, y)
-            mlf.log_metric("accuracy", 0.95)
     """
 
     def __init__(
