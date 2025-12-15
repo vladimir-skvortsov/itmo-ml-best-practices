@@ -85,23 +85,23 @@ test_environment:
 
 ## Train model with MLflow tracking
 train:
-	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/train_model.py
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/train_model.py
 
 ## Run 15+ experiments
 experiments:
-	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/run_experiments.py
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/run_experiments.py
 
 ## Compare MLflow runs
 compare:
-	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/compare_models.py
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/compare_models.py
 
 ## Search and filter runs
 search:
-	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/search_runs.py search
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/search_runs.py search
 
 ## Show leaderboard
 leaderboard:
-	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/search_runs.py leaderboard --metric test_accuracy
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/search_runs.py leaderboard --metric test_accuracy
 
 ## Make predictions
 predict:
