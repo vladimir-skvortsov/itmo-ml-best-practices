@@ -82,7 +82,7 @@ make search
 make predict
 ```
 
-4. **View results in MLflow UI**: http://localhost:5000
+4. **View results in MLflow UI**: http://localhost:3000
 
 ### Available Make Commands
 
