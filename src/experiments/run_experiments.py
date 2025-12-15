@@ -198,7 +198,7 @@ def main(data_path: str, experiment_name: str, target_col: str) -> None:
             f"  {row['name']:20s} - Test: {row['test_acc']:.4f}, Gap: {row['gap']:.4f}"
         )
 
-    click.echo("\nView results in MLflow UI: http://localhost:5000")
+    click.echo("\nView results in MLflow UI: http://localhost:3000")
 
 
 if __name__ == "__main__":
