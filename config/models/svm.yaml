@@ -1,0 +1,20 @@
+# SVM configuration
+model:
+  name: "SVM"
+  type: "svm"
+
+parameters:
+  C: 1.0
+  kernel: "rbf"
+  gamma: "scale"
+  probability: true
+  random_state: 42
+
+training:
+  cross_validation: true
+  cv_folds: 5
+
+mlflow:
+  log_model: true
+  register_model: true
+  model_name: "svm_iris"
