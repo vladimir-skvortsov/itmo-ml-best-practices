@@ -49,8 +49,7 @@ rule train_model:
         model_file = MODELS_DIR + "/{model}/model.pkl",
         metrics = MODELS_DIR + "/{model}/metrics.json"
     params:
-        model_name = "{model}",
-        config_path = lambda wildcards: os.path.abspath(f"config/models/{wildcards.model}.yaml")
+        model_name = "{model}"
     log:
         REPORTS_DIR + "/logs/train_{model}.log"
     resources:
