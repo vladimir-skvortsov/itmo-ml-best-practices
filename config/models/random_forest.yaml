@@ -1,4 +1,3 @@
-# Random Forest configuration
 model:
   name: "RandomForest"
   type: "random_forest"

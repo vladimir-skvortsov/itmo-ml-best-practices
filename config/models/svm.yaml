@@ -1,4 +1,3 @@
-# SVM configuration
 model:
   name: "SVM"
   type: "svm"
