@@ -109,15 +109,15 @@ leaderboard:
 
 ## Run Snakemake pipeline
 pipeline:
-	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake --cores 4
+	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake --cores all
 
 ## Run pipeline with specific target
 pipeline-target:
-	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake $(TARGET) --cores 4
+	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake $(TARGET) --cores all
 
 ## Dry run pipeline (show what would be executed)
 pipeline-dry:
-	snakemake --cores 4 --dry-run
+	snakemake --cores all --dry-run
 
 ## Clean pipeline outputs
 pipeline-clean:
@@ -134,7 +134,7 @@ pipeline-monitor:
 
 ## Run pipeline and monitor
 pipeline-run:
-	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake --cores 4 && $(PYTHON_INTERPRETER) scripts/monitor_pipeline.py
+	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake --cores all && $(PYTHON_INTERPRETER) scripts/monitor_pipeline.py
 
 ## Make predictions
 predict:
