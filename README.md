@@ -60,7 +60,17 @@ docker-compose up -d
 make mlflow-ui
 ```
 
-2. **Run experiments**:
+2. **Run ML pipeline** (Snakemake + Hydra):
+
+```bash
+# Full automated pipeline with 4 models
+make pipeline
+
+# Monitor execution
+make pipeline-monitor
+```
+
+Or run experiments manually:
 
 ```bash
 # Single model training
@@ -71,9 +81,6 @@ make experiments
 
 # View leaderboard
 make leaderboard
-
-# Search and filter runs
-make search
 ```
 
 3. **Make predictions**:
