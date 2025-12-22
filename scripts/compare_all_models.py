@@ -60,7 +60,6 @@ def compare_models(
 
 
 if __name__ == "__main__":
-    # Snakemake variables (snakemake object is injected by Snakemake at runtime)
     compare_models(
         metrics_files=snakemake.input.metrics,  # type: ignore  # noqa: F821
         report_file=snakemake.output.report,  # type: ignore  # noqa: F821
