@@ -1,0 +1,5 @@
+train_accuracy,train_f1,train_precision,train_recall,model_name,model_type
+1.0,1.0,1.0,1.0,random_forest,random_forest
+1.0,1.0,1.0,1.0,gradient_boosting,gradient_boosting
+0.9833333333333333,0.9833333333333333,0.9833333333333333,0.9833333333333333,svm,svm
+0.975,0.9749960931395532,0.9751928288513655,0.975,logistic_regression,logistic_regression
