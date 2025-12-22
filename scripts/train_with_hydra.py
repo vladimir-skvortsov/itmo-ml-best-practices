@@ -10,7 +10,7 @@ from typing import Any
 import joblib
 import mlflow
 import pandas as pd
-from hydra import compose, initialize_config_dir
+from omegaconf import OmegaConf
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
@@ -38,19 +38,15 @@ def train_model_with_hydra(
     model_file: str,
     metrics_file: str,
     model_name: str,
-    config_path: str,
 ) -> None:
     """Train model using Hydra configuration."""
     print(f"Training model: {model_name}")
+
+    # Build config path from model name
+    config_path = os.path.join("config", "models", f"{model_name}.yaml")
     print(f"Config file: {config_path}")
 
-    # Load configuration using Hydra
-    config_path_obj = Path(config_path).absolute()
-    config_dir = str(config_path_obj.parent)
-    config_name = config_path_obj.stem
-
-    with initialize_config_dir(config_dir=config_dir, version_base=None):
-        cfg = compose(config_name=config_name)
+    cfg = OmegaConf.load(config_path)
 
     print(f"Model type: {cfg.model.type}")
     print(f"Parameters: {dict(cfg.parameters)}")
@@ -148,5 +144,4 @@ if __name__ == "__main__":
         model_file=snakemake.output.model_file,  # type: ignore  # noqa: F821
         metrics_file=snakemake.output.metrics,  # type: ignore  # noqa: F821
         model_name=snakemake.params.model_name,  # type: ignore  # noqa: F821
-        config_path=snakemake.params.config_path,  # type: ignore  # noqa: F821
     )
