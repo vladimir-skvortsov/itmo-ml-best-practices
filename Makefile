@@ -103,6 +103,39 @@ search:
 leaderboard:
 	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/search_runs.py leaderboard --metric test_accuracy
 
+#################################################################################
+# SNAKEMAKE PIPELINE COMMANDS                                                    #
+#################################################################################
+
+## Run Snakemake pipeline
+pipeline:
+	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake --cores 4
+
+## Run pipeline with specific target
+pipeline-target:
+	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake $(TARGET) --cores 4
+
+## Dry run pipeline (show what would be executed)
+pipeline-dry:
+	snakemake --cores 4 --dry-run
+
+## Clean pipeline outputs
+pipeline-clean:
+	snakemake clean --cores all
+
+## Visualize pipeline DAG
+pipeline-viz:
+	snakemake --dag | dot -Tpng > workflow_dag.png
+	@echo "Workflow visualization saved to workflow_dag.png"
+
+## Monitor pipeline execution
+pipeline-monitor:
+	$(PYTHON_INTERPRETER) scripts/monitor_pipeline.py
+
+## Run pipeline and monitor
+pipeline-run:
+	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake --cores 4 && $(PYTHON_INTERPRETER) scripts/monitor_pipeline.py
+
 ## Make predictions
 predict:
 	@echo "Note: Requires a trained model. Get run-id from 'make mlflow-ui' or train with 'make train'"
