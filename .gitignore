@@ -101,3 +101,9 @@ models/*
 # Reports
 reports/*
 !reports/.gitkeep
+
+# ClearML
+.clearml/
+clearml_outputs/
+.clearml.conf
+*.clearml
