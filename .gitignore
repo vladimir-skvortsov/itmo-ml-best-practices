@@ -105,5 +105,6 @@ reports/*
 # ClearML
 .clearml/
 clearml_outputs/
+clearml.conf
 .clearml.conf
 *.clearml
