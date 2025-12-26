@@ -185,6 +185,54 @@ install:
 
 
 
+##############################################################################
+# CLEARML COMMANDS
+##############################################################################
+
+## Start ClearML Server
+clearml-up:
+	docker-compose -f docker-compose.clearml.yml up -d
+	@echo "ClearML Server starting..."
+	@echo "Web UI will be available at http://localhost:8080"
+	@echo "API Server: http://localhost:8008"
+	@echo "File Server: http://localhost:8081"
+	@echo "Waiting for services to be ready..."
+	@sleep 10
+
+## Stop ClearML Server
+clearml-down:
+	docker-compose -f docker-compose.clearml.yml down
+
+## Restart ClearML Server
+clearml-restart:
+	docker-compose -f docker-compose.clearml.yml down
+	docker-compose -f docker-compose.clearml.yml up -d
+
+## View ClearML logs
+clearml-logs:
+	docker-compose -f docker-compose.clearml.yml logs -f
+
+## Run ClearML experiment
+clearml-experiment:
+	CLEARML_WEB_HOST=http://localhost:8080 \
+	CLEARML_API_HOST=http://localhost:8008 \
+	CLEARML_FILES_HOST=http://localhost:8081 \
+	$(PYTHON_INTERPRETER) src/clearml_experiments/run_experiments.py
+
+## Run ClearML pipeline
+clearml-pipeline:
+	CLEARML_WEB_HOST=http://localhost:8080 \
+	CLEARML_API_HOST=http://localhost:8008 \
+	CLEARML_FILES_HOST=http://localhost:8081 \
+	$(PYTHON_INTERPRETER) src/clearml_pipelines/iris_pipeline.py
+
+## Train model with ClearML tracking
+clearml-train:
+	CLEARML_WEB_HOST=http://localhost:8080 \
+	CLEARML_API_HOST=http://localhost:8008 \
+	CLEARML_FILES_HOST=http://localhost:8081 \
+	$(PYTHON_INTERPRETER) src/models/train_clearml.py
+
 #################################################################################
 # Self Documenting Commands                                                     #
 #################################################################################
