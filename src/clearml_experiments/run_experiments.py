@@ -115,7 +115,7 @@ def run_experiment(
 ) -> dict[str, Any]:
     """Run a single experiment with ClearML tracking."""
 
-    # Initialize ClearML task
+    # Initialize ClearML task (parent task is closed, so we can use Task.init)
     task = Task.init(
         project_name=project_name,
         task_name=config["name"],
@@ -217,6 +217,10 @@ def main() -> None:
     print(f"Training set size: {len(X_train)}")
     print(f"Test set size: {len(X_test)}")
 
+    # Save parent task ID and close temporarily to allow child tasks
+    parent_task_id = parent_task.id
+    parent_task.close()
+
     # Run all experiments
     results = []
     for config in EXPERIMENT_CONFIGS:
@@ -227,8 +231,21 @@ def main() -> None:
             print(f"Error in experiment {config['name']}: {e}")
             continue
 
+    # Check if we have any results
+    if not results:
+        print("\nERROR: No experiments completed successfully!")
+        return
+
     # Create comparison DataFrame
     results_df = pd.DataFrame(results)
+
+    # Verify required columns exist
+    if "test_accuracy" not in results_df.columns:
+        print("\nERROR: DataFrame missing 'test_accuracy' column!")
+        print(f"Available columns: {list(results_df.columns)}")
+        print(f"Results: {results}")
+        return
+
     results_df = results_df.sort_values("test_accuracy", ascending=False)
 
     print("\n" + "=" * 60)
@@ -243,6 +260,9 @@ def main() -> None:
     results_path = output_dir / "experiment_results.csv"
     results_df.to_csv(results_path, index=False)
     print(f"\nResults saved to {results_path}")
+
+    # Reopen parent task to upload results
+    parent_task = Task.get_task(task_id=parent_task_id)
 
     # Upload results to parent task
     parent_task.upload_artifact("experiment_results", artifact_object=results_path)
