@@ -1,0 +1,141 @@
+version: "3.8"
+
+services:
+  # ClearML API Server
+  clearml-apiserver:
+    image: allegroai/clearml:latest
+    container_name: clearml-apiserver
+    restart: unless-stopped
+    command: apiserver
+    ports:
+      - "8008:8008"
+    environment:
+      - CLEARML_MONGODB_SERVICE_HOST=clearml-mongo
+      - CLEARML_MONGODB_SERVICE_PORT=27017
+      - CLEARML_REDIS_SERVICE_HOST=clearml-redis
+      - CLEARML_REDIS_SERVICE_PORT=6379
+      - CLEARML_ELASTIC_SERVICE_HOST=clearml-elasticsearch
+      - CLEARML_ELASTIC_SERVICE_PORT=9200
+      - CLEARML_SERVER_DEPLOYMENT_TYPE=local
+    depends_on:
+      - clearml-mongo
+      - clearml-redis
+      - clearml-elasticsearch
+    volumes:
+      - clearml-logs:/var/log/clearml
+      - clearml-config:/opt/clearml/config
+    networks:
+      - clearml-network
+
+  # ClearML Web UI
+  clearml-webserver:
+    image: allegroai/clearml:latest
+    container_name: clearml-webserver
+    restart: unless-stopped
+    command: webserver
+    ports:
+      - "8080:80"
+    environment:
+      - CLEARML_API_HOST=http://clearml-apiserver:8008
+    depends_on:
+      - clearml-apiserver
+    networks:
+      - clearml-network
+
+  # ClearML File Server
+  clearml-fileserver:
+    image: allegroai/clearml:latest
+    container_name: clearml-fileserver
+    restart: unless-stopped
+    command: fileserver
+    ports:
+      - "8081:8081"
+    environment:
+      - CLEARML_SECURE=false
+    volumes:
+      - clearml-fileserver-data:/mnt/fileserver
+    networks:
+      - clearml-network
+
+  # MongoDB for ClearML metadata
+  clearml-mongo:
+    image: mongo:7.0
+    container_name: clearml-mongo
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=clearml
+      - MONGO_INITDB_ROOT_PASSWORD=clearml
+    volumes:
+      - clearml-mongo-data:/data/db
+      - clearml-mongo-config:/data/configdb
+    ports:
+      - "27017:27017"
+    networks:
+      - clearml-network
+
+  # Elasticsearch for ClearML logs and metrics
+  clearml-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: clearml-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - clearml-elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - clearml-network
+
+  # Redis for ClearML task queues
+  clearml-redis:
+    image: redis:7-alpine
+    container_name: clearml-redis
+    restart: unless-stopped
+    volumes:
+      - clearml-redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - clearml-network
+
+  # ClearML Agent
+  clearml-agent:
+    image: allegroai/clearml-agent:latest
+    container_name: clearml-agent
+    restart: unless-stopped
+    environment:
+      - CLEARML_API_HOST=http://clearml-apiserver:8008
+      - CLEARML_FILES_HOST=http://clearml-fileserver:8081
+      - CLEARML_WEB_HOST=http://clearml-webserver:8080
+      - CLEARML_AGENT_GIT_USER=${GIT_USER:-}
+      - CLEARML_AGENT_GIT_PASS=${GIT_PASS:-}
+    depends_on:
+      - clearml-apiserver
+      - clearml-fileserver
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - clearml-agent-data:/root/.clearml
+    networks:
+      - clearml-network
+
+volumes:
+  clearml-mongo-data:
+  clearml-mongo-config:
+  clearml-elasticsearch-data:
+  clearml-redis-data:
+  clearml-fileserver-data:
+  clearml-logs:
+  clearml-config:
+  clearml-agent-data:
+
+networks:
+  clearml-network:
+    driver: bridge
