@@ -70,6 +70,21 @@ make pipeline
 make pipeline-monitor
 ```
 
+3. **ClearML MLOps Platform** (optional):
+
+```bash
+# Start ClearML Server
+make clearml-up
+
+# Run experiments with ClearML tracking
+make clearml-experiment
+
+# Run ML pipeline with ClearML
+make clearml-pipeline
+
+# Access Web UI: http://localhost:8080
+```
+
 Or run experiments manually:
 
 ```bash
