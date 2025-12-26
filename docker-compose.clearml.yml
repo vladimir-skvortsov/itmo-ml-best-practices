@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   # ClearML API Server
-  clearml-apiserver:
+  apiserver:
     image: allegroai/clearml:latest
     container_name: clearml-apiserver
     restart: unless-stopped
@@ -10,44 +10,46 @@ services:
     ports:
       - "8008:8008"
     environment:
-      - CLEARML_MONGODB_SERVICE_HOST=mongo
-      - CLEARML_MONGODB_SERVICE_PORT=27017
-      - CLEARML_REDIS_SERVICE_HOST=redis
-      - CLEARML_REDIS_SERVICE_PORT=6379
-      - CLEARML_ELASTIC_SERVICE_HOST=elasticsearch
-      - CLEARML_ELASTIC_SERVICE_PORT=9200
-      - CLEARML_SERVER_DEPLOYMENT_TYPE=local
+      CLEARML_ELASTIC_SERVICE_HOST: elasticsearch
+      CLEARML_ELASTIC_SERVICE_PORT: 9200
+      CLEARML_MONGODB_SERVICE_HOST: mongo
+      CLEARML_MONGODB_SERVICE_PORT: 27017
+      CLEARML_REDIS_SERVICE_HOST: redis
+      CLEARML_REDIS_SERVICE_PORT: 6379
+      CLEARML_SERVER_DEPLOYMENT_TYPE: linux
     depends_on:
-      - clearml-mongo
-      - clearml-redis
-      - clearml-elasticsearch
+      elasticsearch:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+      redis:
+        condition: service_started
+      fileserver:
+        condition: service_started
     volumes:
       - clearml-logs:/var/log/clearml
       - clearml-config:/opt/clearml/config
+      - clearml-fileserver-data:/mnt/fileserver
     networks:
-      clearml-network:
-        aliases:
-          - apiserver
+      - backend
+      - frontend
 
   # ClearML Web UI
-  clearml-webserver:
+  webserver:
     image: allegroai/clearml:latest
     container_name: clearml-webserver
     restart: unless-stopped
     command: webserver
     ports:
       - "8080:80"
-    environment:
-      - CLEARML_API_HOST=http://apiserver:8008
     depends_on:
-      - clearml-apiserver
+      - apiserver
     networks:
-      clearml-network:
-        aliases:
-          - webserver
+      - backend
+      - frontend
 
   # ClearML File Server
-  clearml-fileserver:
+  fileserver:
     image: allegroai/clearml:latest
     container_name: clearml-fileserver
     restart: unless-stopped
@@ -55,90 +57,90 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - CLEARML_SECURE=false
+      CLEARML__fileserver__delete__allow_batch: "true"
     volumes:
       - clearml-fileserver-data:/mnt/fileserver
+      - clearml-logs:/var/log/clearml
+      - clearml-config:/opt/clearml/config
     networks:
-      clearml-network:
-        aliases:
-          - fileserver
+      - backend
+      - frontend
 
   # MongoDB for ClearML metadata
-  clearml-mongo:
+  mongo:
     image: mongo:7.0
     container_name: clearml-mongo
     restart: unless-stopped
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=clearml
-      - MONGO_INITDB_ROOT_PASSWORD=clearml
+    command: --setParameter internalQueryMaxBlockingSortMemoryUsageBytes=196100200
     volumes:
       - clearml-mongo-data:/data/db
       - clearml-mongo-config:/data/configdb
-    ports:
-      - "27017:27017"
     networks:
-      clearml-network:
-        aliases:
-          - mongo
+      - backend
 
   # Elasticsearch for ClearML logs and metrics
-  clearml-elasticsearch:
+  elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
     container_name: clearml-elasticsearch
     restart: unless-stopped
     environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - bootstrap.memory_lock=true
+      bootstrap.memory_lock: "true"
+      cluster.name: clearml
+      discovery.type: single-node
+      http.compression_level: "7"
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
     ulimits:
       memlock:
         soft: -1
         hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
       - clearml-elasticsearch-data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
     networks:
-      clearml-network:
-        aliases:
-          - elasticsearch
+      - backend
 
   # Redis for ClearML task queues
-  clearml-redis:
+  redis:
     image: redis:7-alpine
     container_name: clearml-redis
     restart: unless-stopped
     volumes:
       - clearml-redis-data:/data
-    ports:
-      - "6379:6379"
     networks:
-      clearml-network:
-        aliases:
-          - redis
+      - backend
 
   # ClearML Agent
-  clearml-agent:
-    image: allegroai/clearml-agent:latest
-    container_name: clearml-agent
+  agent-services:
+    image: allegroai/clearml-agent-services:latest
+    container_name: clearml-agent-services
     restart: unless-stopped
+    privileged: true
     environment:
-      - CLEARML_API_HOST=http://apiserver:8008
-      - CLEARML_FILES_HOST=http://fileserver:8081
-      - CLEARML_WEB_HOST=http://webserver:80
-      - CLEARML_AGENT_GIT_USER=${GIT_USER:-}
-      - CLEARML_AGENT_GIT_PASS=${GIT_PASS:-}
+      CLEARML_API_HOST: http://apiserver:8008
+      CLEARML_WEB_HOST: http://webserver:80
+      CLEARML_FILES_HOST: http://fileserver:8081
+      CLEARML_AGENT_GIT_USER: ${GIT_USER:-}
+      CLEARML_AGENT_GIT_PASS: ${GIT_PASS:-}
+      CLEARML_WORKER_ID: "clearml-services"
+      CLEARML_AGENT_DOCKER_HOST_MOUNT: "/opt/clearml/agent:/root/.clearml"
     depends_on:
-      - clearml-apiserver
-      - clearml-fileserver
+      - apiserver
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - clearml-agent-data:/root/.clearml
     networks:
-      clearml-network:
-        aliases:
-          - agent
+      - backend
+    entrypoint: >
+      bash -c "curl --retry 10 --retry-delay 10 --retry-connrefused 'http://apiserver:8008/debug.ping' && /usr/agent/entrypoint.sh"
 
 volumes:
   clearml-mongo-data:
@@ -151,5 +153,7 @@ volumes:
   clearml-agent-data:
 
 networks:
-  clearml-network:
+  backend:
+    driver: bridge
+  frontend:
     driver: bridge
