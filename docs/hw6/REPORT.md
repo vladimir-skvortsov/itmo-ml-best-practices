@@ -1,13 +1,15 @@
-# Homework 6: Documentation
-
-## Что Сделано
+# ДЗ 6: Документация и отчеты
 
 ### MkDocs
 
 - Material theme
-- 12 страниц документации (сокращено с 40+)
+- 12 страниц документации
 - Автогенерация API docs
-- Search, dark mode, code highlighting
+- Поиск, темная тема
+
+![Homepage](homepage.png)
+
+![Model training](model-training.png)
 
 ### Структура
 
@@ -36,12 +38,10 @@ jobs: mkdocs gh-deploy --force
 ## Команды
 
 ```bash
-make docs-serve       # Preview
-make generate-report  # Generate experiment report
+make docs-serve # Preview
+make generate-report # Generate experiment report
 ```
 
-## Результат
+## Результат (после пуша в master)
 
-**Site:** https://vladimirskvortsov.github.io/itmo-ml-best-practices
-
-12 страниц вместо 40+, только практическая информация без лишних объяснений.
+https://vladimirskvortsov.github.io/itmo-ml-best-practices
