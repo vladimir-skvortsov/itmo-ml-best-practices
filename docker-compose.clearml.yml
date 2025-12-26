@@ -10,11 +10,11 @@ services:
     ports:
       - "8008:8008"
     environment:
-      - CLEARML_MONGODB_SERVICE_HOST=clearml-mongo
+      - CLEARML_MONGODB_SERVICE_HOST=mongo
       - CLEARML_MONGODB_SERVICE_PORT=27017
-      - CLEARML_REDIS_SERVICE_HOST=clearml-redis
+      - CLEARML_REDIS_SERVICE_HOST=redis
       - CLEARML_REDIS_SERVICE_PORT=6379
-      - CLEARML_ELASTIC_SERVICE_HOST=clearml-elasticsearch
+      - CLEARML_ELASTIC_SERVICE_HOST=elasticsearch
       - CLEARML_ELASTIC_SERVICE_PORT=9200
       - CLEARML_SERVER_DEPLOYMENT_TYPE=local
     depends_on:
@@ -25,7 +25,9 @@ services:
       - clearml-logs:/var/log/clearml
       - clearml-config:/opt/clearml/config
     networks:
-      - clearml-network
+      clearml-network:
+        aliases:
+          - apiserver
 
   # ClearML Web UI
   clearml-webserver:
@@ -36,11 +38,13 @@ services:
     ports:
       - "8080:80"
     environment:
-      - CLEARML_API_HOST=http://clearml-apiserver:8008
+      - CLEARML_API_HOST=http://apiserver:8008
     depends_on:
       - clearml-apiserver
     networks:
-      - clearml-network
+      clearml-network:
+        aliases:
+          - webserver
 
   # ClearML File Server
   clearml-fileserver:
@@ -55,7 +59,9 @@ services:
     volumes:
       - clearml-fileserver-data:/mnt/fileserver
     networks:
-      - clearml-network
+      clearml-network:
+        aliases:
+          - fileserver
 
   # MongoDB for ClearML metadata
   clearml-mongo:
@@ -71,7 +77,9 @@ services:
     ports:
       - "27017:27017"
     networks:
-      - clearml-network
+      clearml-network:
+        aliases:
+          - mongo
 
   # Elasticsearch for ClearML logs and metrics
   clearml-elasticsearch:
@@ -92,7 +100,9 @@ services:
     ports:
       - "9200:9200"
     networks:
-      - clearml-network
+      clearml-network:
+        aliases:
+          - elasticsearch
 
   # Redis for ClearML task queues
   clearml-redis:
@@ -104,7 +114,9 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - clearml-network
+      clearml-network:
+        aliases:
+          - redis
 
   # ClearML Agent
   clearml-agent:
@@ -112,9 +124,9 @@ services:
     container_name: clearml-agent
     restart: unless-stopped
     environment:
-      - CLEARML_API_HOST=http://clearml-apiserver:8008
-      - CLEARML_FILES_HOST=http://clearml-fileserver:8081
-      - CLEARML_WEB_HOST=http://clearml-webserver:8080
+      - CLEARML_API_HOST=http://apiserver:8008
+      - CLEARML_FILES_HOST=http://fileserver:8081
+      - CLEARML_WEB_HOST=http://webserver:80
       - CLEARML_AGENT_GIT_USER=${GIT_USER:-}
       - CLEARML_AGENT_GIT_PASS=${GIT_PASS:-}
     depends_on:
@@ -124,7 +136,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - clearml-agent-data:/root/.clearml
     networks:
-      - clearml-network
+      clearml-network:
+        aliases:
+          - agent
 
 volumes:
   clearml-mongo-data:
