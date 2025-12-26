@@ -76,17 +76,32 @@ EXPERIMENT_CONFIGS = [
     {
         "name": "gb_conservative",
         "model": "gradient_boosting",
-        "params": {"n_estimators": 50, "learning_rate": 0.05, "max_depth": 3},
+        "params": {
+            "n_estimators": 30,
+            "learning_rate": 0.05,
+            "max_depth": 3,
+            "random_state": 42,
+        },
     },
     {
         "name": "gb_aggressive",
         "model": "gradient_boosting",
-        "params": {"n_estimators": 150, "learning_rate": 0.2, "max_depth": 5},
+        "params": {
+            "n_estimators": 150,
+            "learning_rate": 0.2,
+            "max_depth": 5,
+            "random_state": 42,
+        },
     },
     {
         "name": "gb_balanced",
         "model": "gradient_boosting",
-        "params": {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 3},
+        "params": {
+            "n_estimators": 100,
+            "learning_rate": 0.1,
+            "max_depth": 3,
+            "random_state": 42,
+        },
     },
     # SVM variations
     {"name": "svm_linear", "model": "svm", "params": {"kernel": "linear", "C": 1.0}},
@@ -130,8 +145,10 @@ def run_experiment(
     print(f"Parameters: {config['params']}")
 
     # Train model
+    print("  Training model...")
     model = get_model(config["model"], config["params"])
     model.fit(X_train, y_train)
+    print("  Model trained successfully")
 
     # Make predictions
     y_train_pred = model.predict(X_train)
@@ -143,29 +160,46 @@ def run_experiment(
     train_f1 = f1_score(y_train, y_train_pred, average="weighted")
     test_f1 = f1_score(y_test, y_test_pred, average="weighted")
 
-    # Log metrics
-    task.get_logger().report_single_value("train_accuracy", train_accuracy)
-    task.get_logger().report_single_value("test_accuracy", test_accuracy)
-    task.get_logger().report_single_value("train_f1", train_f1)
-    task.get_logger().report_single_value("test_f1", test_f1)
-    task.get_logger().report_single_value("overfit_gap", train_accuracy - test_accuracy)
+    # Log metrics (with error handling for Elasticsearch issues)
+    try:
+        task.get_logger().report_single_value("train_accuracy", train_accuracy)
+        task.get_logger().report_single_value("test_accuracy", test_accuracy)
+        task.get_logger().report_single_value("train_f1", train_f1)
+        task.get_logger().report_single_value("test_f1", test_f1)
+        task.get_logger().report_single_value(
+            "overfit_gap", train_accuracy - test_accuracy
+        )
+    except Exception as e:
+        print(f"  Warning: Failed to log some metrics: {e}")
+        print("  Continuing with experiment...")
 
     # Save model
     output_dir = Path("models") / "experiments" / config["name"]
     output_dir.mkdir(parents=True, exist_ok=True)
 
     model_path = output_dir / "model.pkl"
+    print("  Saving model...")
     joblib.dump(model, model_path)
+    print("  Model saved")
 
-    # Upload model to ClearML
-    task.upload_artifact("model", artifact_object=model_path)
+    # Upload model to ClearML (with error handling)
+    try:
+        print("  Uploading model to ClearML...")
+        task.upload_artifact("model", artifact_object=model_path)
+        print("  Model uploaded")
+    except Exception as e:
+        print(f"  Warning: Failed to upload model to ClearML: {e}")
+        print("  Continuing without artifact upload...")
 
     print(f"  Train Accuracy: {train_accuracy:.4f}")
     print(f"  Test Accuracy: {test_accuracy:.4f}")
     print(f"  Overfit Gap: {train_accuracy - test_accuracy:.4f}")
 
-    # Close task
-    task.close()
+    # Close task (with error handling)
+    try:
+        task.close()
+    except Exception as e:
+        print(f"  Warning: Error closing task: {e}")
 
     return {
         "name": config["name"],
