@@ -10,6 +10,9 @@ PROFILE = default
 PROJECT_NAME = itmo-ml-best-practices
 PYTHON_INTERPRETER = python3
 
+# Set PYTHONPATH to include project root
+export PYTHONPATH := $(PROJECT_DIR):$(PYTHONPATH)
+
 ifeq (,$(shell which conda))
 HAS_CONDA=False
 else
@@ -80,7 +83,180 @@ test_environment:
 # PROJECT RULES                                                                 #
 #################################################################################
 
+## Train model with MLflow tracking
+train:
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/train_model.py
 
+## Run 15+ experiments
+experiments:
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/run_experiments.py
+
+## Compare MLflow runs
+compare:
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/compare_models.py
+
+## Search and filter runs
+search:
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/search_runs.py search
+
+## Show leaderboard
+leaderboard:
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/search_runs.py leaderboard --metric test_accuracy
+
+#################################################################################
+# SNAKEMAKE PIPELINE COMMANDS                                                    #
+#################################################################################
+
+## Run Snakemake pipeline
+pipeline:
+	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake --cores all
+
+## Run pipeline with specific target
+pipeline-target:
+	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake $(TARGET) --cores all
+
+## Dry run pipeline (show what would be executed)
+pipeline-dry:
+	snakemake --cores all --dry-run
+
+## Clean pipeline outputs
+pipeline-clean:
+	snakemake clean --cores all
+
+## Visualize pipeline DAG
+pipeline-viz:
+	snakemake --dag | dot -Tpng > workflow_dag.png
+	@echo "Workflow visualization saved to workflow_dag.png"
+
+## Monitor pipeline execution
+pipeline-monitor:
+	$(PYTHON_INTERPRETER) scripts/monitor_pipeline.py
+
+## Run pipeline and monitor
+pipeline-run:
+	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake --cores all && $(PYTHON_INTERPRETER) scripts/monitor_pipeline.py
+
+## Make predictions
+predict:
+	@echo "Note: Requires a trained model. Get run-id from 'make mlflow-ui' or train with 'make train'"
+	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/predict_model.py \
+		--data-path data/raw/iris.csv
+
+## Start MLflow UI
+mlflow-ui:
+	mlflow ui
+
+## Test reproducibility
+test-reproducibility:
+	bash scripts/test_reproducibility.sh
+
+## Setup Git LFS
+setup-lfs:
+	git lfs install
+	bash scripts/setup_s3.sh
+
+## Pull LFS files
+lfs-pull:
+	git lfs pull
+
+## Docker: Build image
+docker-build:
+	docker build -t ml-best-practices:latest .
+
+## Docker: Run container
+docker-run:
+	docker run -it --rm -v $(PWD):/app ml-best-practices:latest
+
+## Docker Compose: Start all services
+docker-up:
+	docker-compose up -d
+
+## Docker Compose: Stop all services
+docker-down:
+	docker-compose down
+
+## Docker Compose: View logs
+docker-logs:
+	docker-compose logs -f
+
+## Install Poetry dependencies
+install:
+	poetry install
+
+## Docker Compose: Restart all services
+docker-restart:
+	docker-compose down
+	docker-compose up -d
+
+
+
+##############################################################################
+# DOCUMENTATION COMMANDS
+##############################################################################
+
+## Generate experiment report
+generate-report:
+	MLFLOW_TRACKING_URI=http://localhost:3000 $(PYTHON_INTERPRETER) scripts/generate_experiment_report.py
+
+## Serve documentation locally
+docs-serve:
+	mkdocs serve
+
+## Build documentation
+docs-build:
+	mkdocs build
+
+## Deploy documentation to GitHub Pages
+docs-deploy:
+	mkdocs gh-deploy
+
+##############################################################################
+# CLEARML COMMANDS
+##############################################################################
+
+## Start ClearML Server
+clearml-up:
+	docker-compose -f docker-compose.clearml.yml up -d
+	@echo "ClearML Server starting..."
+	@echo "Web UI will be available at http://localhost:8080"
+	@echo "API Server: http://localhost:8008"
+	@echo "File Server: http://localhost:8081"
+	@echo "Waiting for services to be ready..."
+	@sleep 10
+
+## Stop ClearML Server
+clearml-down:
+	docker-compose -f docker-compose.clearml.yml down
+
+## Restart ClearML Server
+clearml-restart:
+	docker-compose -f docker-compose.clearml.yml down
+	docker-compose -f docker-compose.clearml.yml up -d
+
+## View ClearML logs
+clearml-logs:
+	docker-compose -f docker-compose.clearml.yml logs -f
+
+## Run ClearML experiment
+clearml-experiment:
+	CLEARML_WEB_HOST=http://localhost:8080 \
+	CLEARML_API_HOST=http://localhost:8008 \
+	CLEARML_FILES_HOST=http://localhost:8081 \
+	$(PYTHON_INTERPRETER) src/clearml_experiments/run_experiments.py
+
+## Run ClearML pipeline
+clearml-pipeline:
+	CLEARML_WEB_HOST=http://localhost:8080 \
+	CLEARML_API_HOST=http://localhost:8008 \
+	CLEARML_FILES_HOST=http://localhost:8081 \
+	$(PYTHON_INTERPRETER) src/clearml_pipelines/iris_pipeline.py
+
+## Train model with ClearML tracking
+clearml-train:
+	CLEARML_WEB_HOST=http://localhost:8080 \
+	CLEARML_API_HOST=http://localhost:8008 \
+	CLEARML_FILES_HOST=http://localhost:8081 \
+	$(PYTHON_INTERPRETER) src/models/train_clearml.py
 
 #################################################################################
 # Self Documenting Commands                                                     #

@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+  # MLflow tracking server with PostgreSQL and AWS S3
+  mlflow-server:
+    image: python:3.10-slim
+    container_name: mlflow-server
+    ports:
+      - "3000:3000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=postgresql://mlflow:mlflow@postgres:5432/mlflow
+      # AWS S3 credentials - configure via .env file or pass directly
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+    command: >
+      bash -c "pip install mlflow psycopg2-binary boto3 &&
+               mlflow server --backend-store-uri postgresql://mlflow:mlflow@postgres:5432/mlflow --default-artifact-root s3://${MLFLOW_S3_BUCKET:-mlflow-artifacts}/ --host 0.0.0.0 --port 3000"
+    depends_on:
+      - postgres
+    networks:
+      - mlflow-network
+
+  # PostgreSQL database for MLflow metadata
+  postgres:
+    image: postgres:15-alpine
+    container_name: mlflow-postgres
+    environment:
+      - POSTGRES_USER=mlflow
+      - POSTGRES_PASSWORD=mlflow
+      - POSTGRES_DB=mlflow
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - mlflow-network
+
+  # Main application
+  ml-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ml-app
+    volumes:
+      - .:/app
+      - poetry-cache:/root/.cache/pypoetry
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow-server:3000
+      # AWS S3 credentials - configure via .env file or pass directly
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - PYTHONPATH=/app
+    depends_on:
+      - mlflow-server
+    networks:
+      - mlflow-network
+    command: /bin/bash
+
+volumes:
+  postgres-data:
+  poetry-cache:
+
+networks:
+  mlflow-network:
+    driver: bridge

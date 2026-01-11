@@ -30,5 +30,4 @@ repos:
     hooks:
       - id: bandit
         additional_dependencies: [pbr]
-        args: ["-f", "json", "-o", "bandit-report.json"]
         exclude: ^tests/

@@ -5,6 +5,7 @@ A machine learning project based on the classical Iris dataset. The project incl
 ## Requirements
 
 - Python >= 3.10
+- Git with Git LFS
 - Poetry >= 2.0.0 (recommended) or pip
 - Docker (optional, for containerized development)
 
@@ -51,46 +52,96 @@ docker run -it -v $(pwd):/app itmo-ml-best-practices
 
 ### Basic Workflow
 
-1. **Prepare the data**:
+1. **Start MLflow server**:
 
 ```bash
-make data
+docker-compose up -d
+# or
+make mlflow-ui
 ```
 
-Or directly:
+2. **Run ML pipeline** (Snakemake + Hydra):
 
 ```bash
-python src/data/make_dataset.py data/raw data/processed
+# Full automated pipeline with 4 models
+make pipeline
+
+# Monitor execution
+make pipeline-monitor
 ```
 
-2. **Train a model**:
+3. **ClearML MLOps Platform** (optional):
 
 ```bash
-python src/models/train_model.py
+# Start ClearML Server
+make clearml-up
+
+# Configure credentials (first time only)
+# 1. Open http://localhost:8080
+# 2. Get credentials from Settings → Workspace → App Credentials
+# 3. Copy clearml.conf.example to clearml.conf
+# 4. Add your credentials to clearml.conf
+# 5. Copy to home: cp clearml.conf ~/clearml.conf
+
+# Run experiments with ClearML tracking
+make clearml-experiment
+
+# Run ML pipeline with ClearML
+make clearml-pipeline
+
+# Access Web UI: http://localhost:8080
+```
+
+**Security Note:** Never commit `clearml.conf` with real credentials to Git! Use `clearml.conf.example` as template.
+
+Or run experiments manually:
+
+```bash
+# Single model training
+make train
+
+# Run experiments with different algorithms
+make experiments
+
+# View leaderboard
+make leaderboard
 ```
 
 3. **Make predictions**:
 
 ```bash
-python src/models/predict_model.py
+make predict
 ```
 
-4. **Generate visualizations**:
-
-```bash
-python src/visualization/visualize.py
-```
+4. **View results in MLflow UI**: http://localhost:3000
 
 ### Available Make Commands
 
 Run `make help` to see all available commands:
 
+**ML & Experiments:**
+
+- `make train` - Train a single model with MLflow tracking
+- `make experiments` - Run 15+ experiments with different algorithms
+- `make compare` - Compare MLflow runs
+- `make search` - Search and filter experiments
+- `make leaderboard` - Show top models by metric
+- `make predict` - Make predictions using trained model
+
+**Infrastructure:**
+
+- `make docker-up` - Start Docker services (MLflow, PostgreSQL)
+- `make docker-down` - Stop Docker services
+- `make mlflow-ui` - Open MLflow UI
+- `make lfs-pull` - Download LFS files
+
+**Development:**
+
 - `make requirements` - Install Python dependencies
-- `make data` - Generate processed dataset from raw data
-- `make clean` - Remove all compiled Python files
-- `make lint` - Run code linting with flake8
-- `make test_environment` - Test that Python environment is set up correctly
-- `make create_environment` - Set up Python interpreter environment (conda or virtualenv)
+- `make data` - Generate processed dataset
+- `make clean` - Remove compiled Python files
+- `make lint` - Run code linting
+- `make test-reproducibility` - Test reproducibility
 
 ## Development
 
@@ -156,6 +207,12 @@ bandit -r src/
         │
         ├── data           <- Scripts to download or generate data
         │   └── make_dataset.py
+        │
+        ├── experiments    <- Experiment tracking and MLflow utilities
+        │   ├── run_experiments.py  <- Run multiple experiments
+        │   ├── decorators.py       <- MLflow decorators
+        │   ├── utils.py            <- Helper functions
+        │   └── search_runs.py      <- CLI for search/filter
         │
         ├── features       <- Scripts to turn raw data into features for modeling
         │   └── build_features.py

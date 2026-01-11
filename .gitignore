@@ -75,9 +75,6 @@ target/
 # Jupyter NB Checkpoints
 .ipynb_checkpoints/
 
-# exclude data from source control by default
-/data/
-
 # Mac OS-specific storage files
 .DS_Store
 
@@ -87,3 +84,27 @@ target/
 
 # Mypy cache
 .mypy_cache/
+
+# Snakemake
+.snakemake/
+.snakemake_timestamp
+workflow_dag.png
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Models
+models/*
+!models/.gitkeep
+
+# Reports
+reports/*
+!reports/.gitkeep
+
+# ClearML
+.clearml/
+clearml_outputs/
+clearml.conf
+.clearml.conf
+*.clearml
