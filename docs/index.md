@@ -49,4 +49,4 @@ data/ → prepare → train (parallel) → evaluate → compare
 
 1. [Installation](getting-started/installation.md) - setup окружения
 2. [Quick Start](getting-started/quick-start.md) - первые шаги
-3. [Guides](guides/data-versioning.md) - подробные инструкции
+3. [Guides](guides/model-training.md) - подробные инструкции
