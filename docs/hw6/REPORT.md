@@ -44,4 +44,4 @@ make generate-report # Generate experiment report
 
 ## Результат
 
-https://vladimirskvortsov.github.io/itmo-ml-best-practices
+https://vladimir-skvortsov.github.io/itmo-ml-best-practices/
