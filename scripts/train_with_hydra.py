@@ -10,7 +10,8 @@ from typing import Any
 import joblib
 import mlflow
 import pandas as pd
-from omegaconf import OmegaConf
+from hydra import compose, initialize_config_dir
+from hydra.core.global_hydra import GlobalHydra
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
@@ -42,98 +43,93 @@ def train_model_with_hydra(
     """Train model using Hydra configuration."""
     print(f"Training model: {model_name}")
 
-    # Build config path from model name
-    config_path = os.path.join("config", "models", f"{model_name}.yaml")
-    print(f"Config file: {config_path}")
+    config_dir = str(Path.cwd() / "config" / "models")
+    config_name = model_name
 
-    cfg = OmegaConf.load(config_path)
+    print(f"Config directory: {config_dir}")
+    print(f"Config name: {config_name}")
 
-    print(f"Model type: {cfg.model.type}")
-    print(f"Parameters: {dict(cfg.parameters)}")
+    GlobalHydra.instance().clear()
 
-    # Load data
-    df = pd.read_csv(train_data)
+    with initialize_config_dir(version_base=None, config_dir=config_dir):
+        cfg = compose(config_name=config_name)
 
-    with open(metadata_file) as f:
-        metadata = json.load(f)
+        print(f"Model type: {cfg.model.type}")
+        print(f"Parameters: {dict(cfg.parameters)}")
 
-    target_col = metadata["target_col"]
-    X = df.drop(columns=[target_col]).values
-    y = df[target_col].values
+        df = pd.read_csv(train_data)
 
-    # Initialize model
-    model = get_model(cfg.model.type, dict(cfg.parameters))
+        with open(metadata_file) as f:
+            metadata = json.load(f)
 
-    # Setup MLflow
-    mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://localhost:3000"))
-    mlflow.set_experiment("snakemake-pipeline")
-    mlflow.sklearn.autolog()
+        target_col = metadata["target_col"]
+        X = df.drop(columns=[target_col]).values
+        y = df[target_col].values
 
-    with mlflow.start_run(run_name=f"{model_name}_{cfg.model.name}"):
-        # Log config
-        mlflow.log_param("model_name", model_name)
-        mlflow.log_param("model_type", cfg.model.type)
-        mlflow.log_param("config_file", config_path)
+        model = get_model(cfg.model.type, dict(cfg.parameters))
 
-        # Cross-validation if enabled
-        if cfg.training.cross_validation:
-            cv_scores = cross_val_score(model, X, y, cv=cfg.training.cv_folds)
-            cv_mean = cv_scores.mean()
-            cv_std = cv_scores.std()
-            print(f"Cross-validation scores: {cv_scores}")
-            print(f"CV Mean: {cv_mean:.4f} (+/- {cv_std:.4f})")
-            mlflow.log_metric("cv_mean_score", cv_mean)
-            mlflow.log_metric("cv_std_score", cv_std)
+        tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:3000")
+        mlflow.set_tracking_uri(tracking_uri)
+        mlflow.set_experiment("snakemake-pipeline")
+        mlflow.sklearn.autolog()
 
-        # Train model
-        print("Training model...")
-        model.fit(X, y)
+        with mlflow.start_run(run_name=f"{model_name}_{cfg.model.name}"):
+            mlflow.log_param("model_name", model_name)
+            mlflow.log_param("model_type", cfg.model.type)
+            mlflow.log_param("hydra_config", config_name)
 
-        # Evaluate on training data
-        y_pred = model.predict(X)
-        train_accuracy = accuracy_score(y, y_pred)
-        train_f1 = f1_score(y, y_pred, average="weighted")
-        train_precision = precision_score(y, y_pred, average="weighted")
-        train_recall = recall_score(y, y_pred, average="weighted")
+            if cfg.training.cross_validation:
+                cv_scores = cross_val_score(model, X, y, cv=cfg.training.cv_folds)
+                cv_mean = cv_scores.mean()
+                cv_std = cv_scores.std()
+                print(f"Cross-validation scores: {cv_scores}")
+                print(f"CV Mean: {cv_mean:.4f} (+/- {cv_std:.4f})")
+                mlflow.log_metric("cv_mean_score", cv_mean)
+                mlflow.log_metric("cv_std_score", cv_std)
 
-        print(f"Train Accuracy: {train_accuracy:.4f}")
-        print(f"Train F1: {train_f1:.4f}")
+            print("Training model...")
+            model.fit(X, y)
 
-        # Save metrics
-        metrics = {
-            "train_accuracy": train_accuracy,
-            "train_f1": train_f1,
-            "train_precision": train_precision,
-            "train_recall": train_recall,
-            "model_name": model_name,
-            "model_type": cfg.model.type,
-        }
+            y_pred = model.predict(X)
+            train_accuracy = accuracy_score(y, y_pred)
+            train_f1 = f1_score(y, y_pred, average="weighted")
+            train_precision = precision_score(y, y_pred, average="weighted")
+            train_recall = recall_score(y, y_pred, average="weighted")
 
-        mlflow.log_metrics(
-            {
+            print(f"Train Accuracy: {train_accuracy:.4f}")
+            print(f"Train F1: {train_f1:.4f}")
+
+            metrics = {
                 "train_accuracy": train_accuracy,
                 "train_f1": train_f1,
                 "train_precision": train_precision,
                 "train_recall": train_recall,
+                "model_name": model_name,
+                "model_type": cfg.model.type,
             }
-        )
 
-        # Save model
-        Path(model_file).parent.mkdir(parents=True, exist_ok=True)
-        joblib.dump(model, model_file)
-        print(f"Model saved to {model_file}")
+            mlflow.log_metrics(
+                {
+                    "train_accuracy": train_accuracy,
+                    "train_f1": train_f1,
+                    "train_precision": train_precision,
+                    "train_recall": train_recall,
+                }
+            )
 
-        # Save metrics to file
-        with open(metrics_file, "w") as f:
-            json.dump(metrics, f, indent=2)
-        print(f"Metrics saved to {metrics_file}")
+            Path(model_file).parent.mkdir(parents=True, exist_ok=True)
+            joblib.dump(model, model_file)
+            print(f"Model saved to {model_file}")
 
-        # Register model if configured
-        if cfg.mlflow.register_model:
-            run = mlflow.active_run()
-            model_uri = f"runs:/{run.info.run_id}/model"
-            mlflow.register_model(model_uri, cfg.mlflow.model_name)
-            print(f"Model registered as {cfg.mlflow.model_name}")
+            with open(metrics_file, "w") as f:
+                json.dump(metrics, f, indent=2)
+            print(f"Metrics saved to {metrics_file}")
+
+            if cfg.mlflow.register_model:
+                run = mlflow.active_run()
+                model_uri = f"runs:/{run.info.run_id}/model"
+                mlflow.register_model(model_uri, cfg.mlflow.model_name)
+                print(f"Model registered as {cfg.mlflow.model_name}")
 
 
 if __name__ == "__main__":

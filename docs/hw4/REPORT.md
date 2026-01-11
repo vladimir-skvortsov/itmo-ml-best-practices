@@ -60,6 +60,12 @@ resources:
 snakemake --cores all
 ```
 
+**Демонстрация параллельного выполнения:**
+
+![Parallel execution](parallel-execution.png)
+
+На скриншоте видно, что 4 модели (logistic_regression, random_forest, gradient_boosting, svm) обучаются параллельно после этапа prepare_data.
+
 ---
 
 ## 2. Настройка Hydra
@@ -112,17 +118,25 @@ Hydra автоматически валидирует:
 
 ### Композиция конфигураций
 
-Используется иерархическая структура:
-
-1. Базовая конфигурация (`pipeline_config.yaml`)
-2. Специфичные для модели (`models/*.yaml`)
-3. Динамическая загрузка через Hydra API
-
-Пример загрузки:
+Используется Hydra API для программной загрузки конфигураций:
 
 ```python
-with initialize_config_dir(config_dir=config_dir, version_base=None):
-    cfg = compose(config_name=config_name)
+from hydra import compose, initialize_config_dir
+from hydra.core.global_hydra import GlobalHydra
+
+# Очистка предыдущих инстансов Hydra
+GlobalHydra.instance().clear()
+
+# Инициализация с директорией конфигураций
+config_dir = str(Path.cwd() / "config" / "models")
+
+with initialize_config_dir(version_base=None, config_dir=config_dir):
+    # Загрузка конфигурации по имени модели
+    cfg = compose(config_name="random_forest")
+
+    # Доступ к параметрам
+    model_type = cfg.model.type
+    params = dict(cfg.parameters)
 ```
 
 ---
@@ -131,20 +145,9 @@ with initialize_config_dir(config_dir=config_dir, version_base=None):
 
 ### Интеграция Snakemake + Hydra
 
-Скрипт `scripts/train_with_hydra.py` объединяет оба инструмента:
+Скрипт `scripts/train_with_hydra.py` объединяет оба инструмента.
 
-```python
-# Загрузка конфигурации Hydra
-with initialize_config_dir(config_dir=config_dir):
-    cfg = compose(config_name=config_name)
-
-# Получение параметров из Hydra
-model = get_model(cfg.model.type, dict(cfg.parameters))
-
-# Обучение с MLflow tracking
-mlflow.sklearn.autolog()
-model.fit(X, y)
-```
+Snakemake передает `model_name` через `params`, Hydra загружает соответствующий YAML файл.
 
 ### Мониторинг выполнения
 
