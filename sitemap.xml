@@ -1,67 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/about/structure/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/about/structure/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/api/models/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/api/models/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/deployment/docker/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/deployment/docker/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/getting-started/installation/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/getting-started/installation/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/getting-started/quick-start/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/getting-started/quick-start/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/guides/experiment-tracking/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/guides/experiment-tracking/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/guides/mlops-workflow/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/guides/mlops-workflow/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/guides/model-training/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/guides/model-training/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/guides/pipeline-orchestration/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/guides/pipeline-orchestration/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/hw1/REPORT/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/hw1/REPORT/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/hw2/REPORT/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/hw2/REPORT/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/hw3/REPORT/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/hw3/REPORT/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/hw4/REPORT/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/hw4/REPORT/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/hw5/REPORT/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/hw5/REPORT/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
     <url>
-         <loc>https://vladimirskvortsov.github.io/itmo-ml-best-practices/hw6/REPORT/</loc>
+         <loc>https://vladimir-skvortsov.github.io/itmo-ml-best-practices/hw6/REPORT/</loc>
          <lastmod>2026-01-11</lastmod>
     </url>
 </urlset>
