@@ -43,25 +43,20 @@ def train_model_with_hydra(
     """Train model using Hydra configuration."""
     print(f"Training model: {model_name}")
 
-    # Get absolute path to config directory
     config_dir = str(Path.cwd() / "config" / "models")
     config_name = model_name
 
     print(f"Config directory: {config_dir}")
     print(f"Config name: {config_name}")
 
-    # Clear any existing Hydra instance
     GlobalHydra.instance().clear()
 
-    # Initialize Hydra with config directory
     with initialize_config_dir(version_base=None, config_dir=config_dir):
-        # Compose configuration
         cfg = compose(config_name=config_name)
 
         print(f"Model type: {cfg.model.type}")
         print(f"Parameters: {dict(cfg.parameters)}")
 
-        # Load data
         df = pd.read_csv(train_data)
 
         with open(metadata_file) as f:
@@ -71,22 +66,18 @@ def train_model_with_hydra(
         X = df.drop(columns=[target_col]).values
         y = df[target_col].values
 
-        # Initialize model
         model = get_model(cfg.model.type, dict(cfg.parameters))
 
-        # Setup MLflow
         tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:3000")
         mlflow.set_tracking_uri(tracking_uri)
         mlflow.set_experiment("snakemake-pipeline")
         mlflow.sklearn.autolog()
 
         with mlflow.start_run(run_name=f"{model_name}_{cfg.model.name}"):
-            # Log config
             mlflow.log_param("model_name", model_name)
             mlflow.log_param("model_type", cfg.model.type)
             mlflow.log_param("hydra_config", config_name)
 
-            # Cross-validation if enabled
             if cfg.training.cross_validation:
                 cv_scores = cross_val_score(model, X, y, cv=cfg.training.cv_folds)
                 cv_mean = cv_scores.mean()
@@ -96,11 +87,9 @@ def train_model_with_hydra(
                 mlflow.log_metric("cv_mean_score", cv_mean)
                 mlflow.log_metric("cv_std_score", cv_std)
 
-            # Train model
             print("Training model...")
             model.fit(X, y)
 
-            # Evaluate on training data
             y_pred = model.predict(X)
             train_accuracy = accuracy_score(y, y_pred)
             train_f1 = f1_score(y, y_pred, average="weighted")
@@ -110,7 +99,6 @@ def train_model_with_hydra(
             print(f"Train Accuracy: {train_accuracy:.4f}")
             print(f"Train F1: {train_f1:.4f}")
 
-            # Save metrics
             metrics = {
                 "train_accuracy": train_accuracy,
                 "train_f1": train_f1,
@@ -129,12 +117,10 @@ def train_model_with_hydra(
                 }
             )
 
-            # Save model
             Path(model_file).parent.mkdir(parents=True, exist_ok=True)
             joblib.dump(model, model_file)
             print(f"Model saved to {model_file}")
 
-            # Save metrics to file
             with open(metrics_file, "w") as f:
                 json.dump(metrics, f, indent=2)
             print(f"Metrics saved to {metrics_file}")
