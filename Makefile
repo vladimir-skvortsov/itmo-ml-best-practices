@@ -183,7 +183,32 @@ docker-logs:
 install:
 	poetry install
 
+## Docker Compose: Restart all services
+docker-restart:
+	docker-compose down
+	docker-compose up -d
 
+
+
+##############################################################################
+# DOCUMENTATION COMMANDS
+##############################################################################
+
+## Generate experiment report
+generate-report:
+	MLFLOW_TRACKING_URI=http://localhost:3000 $(PYTHON_INTERPRETER) scripts/generate_experiment_report.py
+
+## Serve documentation locally
+docs-serve:
+	mkdocs serve
+
+## Build documentation
+docs-build:
+	mkdocs build
+
+## Deploy documentation to GitHub Pages
+docs-deploy:
+	mkdocs gh-deploy
 
 ##############################################################################
 # CLEARML COMMANDS
