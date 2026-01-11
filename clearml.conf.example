@@ -1,0 +1,44 @@
+api {
+    web_server: http://localhost:8080
+    api_server: http://localhost:8008
+    files_server: http://localhost:8081
+
+    # Create credentials and paste them here
+    credentials {
+        "access_key" = "YOUR_ACCESS_KEY_HERE"
+        "secret_key" = "YOUR_SECRET_KEY_HERE"
+    }
+}
+
+sdk {
+    storage {
+        cache {
+            default_base_dir: "~/.clearml/cache"
+        }
+    }
+
+    metrics {
+        matplotlib_untitled_history_length: 100
+        images_format: JPEG
+        images_quality: 87
+        images_maxdim: 2048
+    }
+
+    network {
+        metrics {
+            file_upload_starvation_warning_sec: 120
+        }
+    }
+
+    development {
+        support_stopping: true
+        default_output_uri: "http://localhost:8081"
+    }
+
+    log {
+        null_log_propagate: false
+        task_log_buffer_capacity: 66
+        disable_urllib3_info: true
+    }
+}
+

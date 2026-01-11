@@ -85,11 +85,56 @@ test_environment:
 
 ## Train model with MLflow tracking
 train:
-	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/train_model.py
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/train_model.py
+
+## Run 15+ experiments
+experiments:
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/run_experiments.py
 
 ## Compare MLflow runs
 compare:
-	PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/compare_models.py
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/models/compare_models.py
+
+## Search and filter runs
+search:
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/search_runs.py search
+
+## Show leaderboard
+leaderboard:
+	MLFLOW_TRACKING_URI=http://localhost:3000 PYTHONPATH=$(PROJECT_DIR) $(PYTHON_INTERPRETER) src/experiments/search_runs.py leaderboard --metric test_accuracy
+
+#################################################################################
+# SNAKEMAKE PIPELINE COMMANDS                                                    #
+#################################################################################
+
+## Run Snakemake pipeline
+pipeline:
+	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake --cores all
+
+## Run pipeline with specific target
+pipeline-target:
+	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake $(TARGET) --cores all
+
+## Dry run pipeline (show what would be executed)
+pipeline-dry:
+	snakemake --cores all --dry-run
+
+## Clean pipeline outputs
+pipeline-clean:
+	snakemake clean --cores all
+
+## Visualize pipeline DAG
+pipeline-viz:
+	snakemake --dag | dot -Tpng > workflow_dag.png
+	@echo "Workflow visualization saved to workflow_dag.png"
+
+## Monitor pipeline execution
+pipeline-monitor:
+	$(PYTHON_INTERPRETER) scripts/monitor_pipeline.py
+
+## Run pipeline and monitor
+pipeline-run:
+	MLFLOW_TRACKING_URI=http://localhost:3000 snakemake --cores all && $(PYTHON_INTERPRETER) scripts/monitor_pipeline.py
 
 ## Make predictions
 predict:
@@ -138,7 +183,80 @@ docker-logs:
 install:
 	poetry install
 
+## Docker Compose: Restart all services
+docker-restart:
+	docker-compose down
+	docker-compose up -d
 
+
+
+##############################################################################
+# DOCUMENTATION COMMANDS
+##############################################################################
+
+## Generate experiment report
+generate-report:
+	MLFLOW_TRACKING_URI=http://localhost:3000 $(PYTHON_INTERPRETER) scripts/generate_experiment_report.py
+
+## Serve documentation locally
+docs-serve:
+	mkdocs serve
+
+## Build documentation
+docs-build:
+	mkdocs build
+
+## Deploy documentation to GitHub Pages
+docs-deploy:
+	mkdocs gh-deploy
+
+##############################################################################
+# CLEARML COMMANDS
+##############################################################################
+
+## Start ClearML Server
+clearml-up:
+	docker-compose -f docker-compose.clearml.yml up -d
+	@echo "ClearML Server starting..."
+	@echo "Web UI will be available at http://localhost:8080"
+	@echo "API Server: http://localhost:8008"
+	@echo "File Server: http://localhost:8081"
+	@echo "Waiting for services to be ready..."
+	@sleep 10
+
+## Stop ClearML Server
+clearml-down:
+	docker-compose -f docker-compose.clearml.yml down
+
+## Restart ClearML Server
+clearml-restart:
+	docker-compose -f docker-compose.clearml.yml down
+	docker-compose -f docker-compose.clearml.yml up -d
+
+## View ClearML logs
+clearml-logs:
+	docker-compose -f docker-compose.clearml.yml logs -f
+
+## Run ClearML experiment
+clearml-experiment:
+	CLEARML_WEB_HOST=http://localhost:8080 \
+	CLEARML_API_HOST=http://localhost:8008 \
+	CLEARML_FILES_HOST=http://localhost:8081 \
+	$(PYTHON_INTERPRETER) src/clearml_experiments/run_experiments.py
+
+## Run ClearML pipeline
+clearml-pipeline:
+	CLEARML_WEB_HOST=http://localhost:8080 \
+	CLEARML_API_HOST=http://localhost:8008 \
+	CLEARML_FILES_HOST=http://localhost:8081 \
+	$(PYTHON_INTERPRETER) src/clearml_pipelines/iris_pipeline.py
+
+## Train model with ClearML tracking
+clearml-train:
+	CLEARML_WEB_HOST=http://localhost:8080 \
+	CLEARML_API_HOST=http://localhost:8008 \
+	CLEARML_FILES_HOST=http://localhost:8081 \
+	$(PYTHON_INTERPRETER) src/models/train_clearml.py
 
 #################################################################################
 # Self Documenting Commands                                                     #

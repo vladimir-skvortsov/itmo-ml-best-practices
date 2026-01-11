@@ -1,0 +1,71 @@
+site_name: ITMO ML Best Practices
+site_description: MLOps best practices for reproducible machine learning
+site_author: Vladimir Skvortsov
+site_url: https://vladimirskvortsov.github.io/itmo-ml-best-practices
+
+repo_name: itmo-ml-best-practices
+repo_url: https://github.com/vladimirskvortsov/itmo-ml-best-practices
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - tables
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+  - Guides:
+      - Model Training: guides/model-training.md
+      - Experiments: guides/experiment-tracking.md
+      - Pipeline: guides/pipeline-orchestration.md
+      - ClearML: guides/mlops-workflow.md
+  - API:
+      - Models: api/models.md
+  - Deployment:
+      - Docker: deployment/docker.md
+  - About:
+      - Structure: about/structure.md

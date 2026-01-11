@@ -139,5 +139,5 @@ make train
 # Сравнение экспериментов
 make compare
 
-# Просмотр в MLflow UI: http://localhost:5000
+# Просмотр в MLflow UI: http://localhost:3000
 ```

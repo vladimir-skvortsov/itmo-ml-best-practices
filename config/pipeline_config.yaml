@@ -1,0 +1,19 @@
+# Main pipeline configuration
+data:
+  test_size: 0.2
+  random_state: 42
+  target_col: "Species"
+
+models:
+  - logistic_regression
+  - random_forest
+  - gradient_boosting
+  - svm
+
+mlflow:
+  tracking_uri: "http://localhost:3000"
+  experiment_name: "snakemake-pipeline"
+
+resources:
+  parallel_jobs: 4
+  max_memory_mb: 4000
