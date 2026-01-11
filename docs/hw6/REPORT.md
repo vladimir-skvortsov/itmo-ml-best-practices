@@ -42,6 +42,6 @@ make docs-serve # Preview
 make generate-report # Generate experiment report
 ```
 
-## Результат (после пуша в master)
+## Результат
 
 https://vladimirskvortsov.github.io/itmo-ml-best-practices
