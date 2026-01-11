@@ -70,6 +70,30 @@ make pipeline
 make pipeline-monitor
 ```
 
+3. **ClearML MLOps Platform** (optional):
+
+```bash
+# Start ClearML Server
+make clearml-up
+
+# Configure credentials (first time only)
+# 1. Open http://localhost:8080
+# 2. Get credentials from Settings → Workspace → App Credentials
+# 3. Copy clearml.conf.example to clearml.conf
+# 4. Add your credentials to clearml.conf
+# 5. Copy to home: cp clearml.conf ~/clearml.conf
+
+# Run experiments with ClearML tracking
+make clearml-experiment
+
+# Run ML pipeline with ClearML
+make clearml-pipeline
+
+# Access Web UI: http://localhost:8080
+```
+
+**Security Note:** Never commit `clearml.conf` with real credentials to Git! Use `clearml.conf.example` as template.
+
 Or run experiments manually:
 
 ```bash
