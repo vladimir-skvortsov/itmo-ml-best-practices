@@ -1,10 +1,10 @@
 site_name: ITMO ML Best Practices
 site_description: MLOps best practices for reproducible machine learning
 site_author: Vladimir Skvortsov
-site_url: https://vladimirskvortsov.github.io/itmo-ml-best-practices
+site_url: https://vladimir-skvortsov.github.io/itmo-ml-best-practices/
 
 repo_name: itmo-ml-best-practices
-repo_url: https://github.com/vladimirskvortsov/itmo-ml-best-practices
+repo_url: https://github.com/vladimir-skvortsov/itmo-ml-best-practices
 
 theme:
   name: material
