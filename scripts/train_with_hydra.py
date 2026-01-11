@@ -125,7 +125,6 @@ def train_model_with_hydra(
                 json.dump(metrics, f, indent=2)
             print(f"Metrics saved to {metrics_file}")
 
-            # Register model if configured
             if cfg.mlflow.register_model:
                 run = mlflow.active_run()
                 model_uri = f"runs:/{run.info.run_id}/model"
